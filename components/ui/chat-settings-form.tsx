@@ -140,7 +140,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
     model => model.model_id === chatSettings.model
   )
 
-  useEffect(() => {}, [])
+  useEffect(() => { }, [])
 
   function findOpenRouterModel(modelId: string) {
     return availableOpenRouterModels.find(model => model.modelId === modelId)
@@ -161,7 +161,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
 
   const maxContextLength = isCustomModel
     ? models.find(model => model.model_id === chatSettings.model)
-        ?.context_length
+      ?.context_length
     : MODEL_LIMITS.MAX_CONTEXT_LENGTH
 
   return (
@@ -268,7 +268,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
           }}
         >
           <SelectTrigger>
-            <SelectValue defaultValue="openai" />
+            <SelectValue defaultValue="local" />
           </SelectTrigger>
 
           <SelectContent>
@@ -276,9 +276,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
               {profile?.use_azure_openai ? "Azure OpenAI" : "OpenAI"}
             </SelectItem>
 
-            {window.location.hostname === "localhost" && (
-              <SelectItem value="local">Local</SelectItem>
-            )}
+            <SelectItem value="local">Local</SelectItem>
           </SelectContent>
         </Select>
       </div>
