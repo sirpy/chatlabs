@@ -204,7 +204,7 @@ function buildRetrievalText(fileItems: Tables<"file_items">[]) {
     .map(item => `<BEGIN SOURCE>\n${item.content}\n</END SOURCE>`)
     .join("\n\n")
 
-  return `You may use the following sources if needed to answer the user's question. If you don't know the answer, say "I don't know."\n\n${retrievalText}`
+  return `You may use the following sources if needed to answer the user's question. If you don't know the answer, say "I don't know. Answer in the question language."\n\n${retrievalText}`
 }
 
 export async function buildGoogleGeminiFinalMessages(

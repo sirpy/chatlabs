@@ -11,6 +11,9 @@ create table file_items (
   -- METADATA
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ,
+  source UUID,
+  "next" UUID,
+
 
   -- SHARING
   sharing TEXT NOT NULL DEFAULT 'private',
@@ -83,6 +86,39 @@ begin
   where (file_id = ANY(file_ids))
   order by file_items.local_embedding <=> query_embedding
   limit match_count;
+end;
+$$;
+
+
+create function match_file_pages_local (
+  query_embedding vector(384),
+  match_count int DEFAULT null,
+  file_ids UUID[] DEFAULT null
+) returns table (
+  id UUID,
+  file_id UUID,
+  source UUID,
+  content TEXT,
+  tokens INT,
+  similarity float
+)
+language plpgsql
+as $$
+#variable_conflict use_column
+begin
+  return query
+  with matches AS (select
+    id
+    file_id,
+    source,
+    content,
+    tokens,
+    1 - (file_items.local_embedding <=> query_embedding) as similarity
+  from file_items
+  where (file_id = ANY(file_ids))
+  order by file_items.local_embedding <=> query_embedding
+  limit match_count)
+  select id, file_id,source, content, tokens, -1 as similarity from file_items where (id = ANY(select source from matches)) UNION ALL (select id, file_id,source, content, tokens, similarity from matches);
 end;
 $$;
 

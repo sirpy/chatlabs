@@ -3,6 +3,7 @@ import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
 import { Database } from "@/supabase/types"
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
+import { groupBy, uniq } from "lodash"
 
 export async function POST(request: Request) {
   const json = await request.json()
@@ -69,27 +70,79 @@ export async function POST(request: Request) {
 
       chunks = openaiFileItems
     } else if (embeddingsProvider === "local") {
+      console.log("retrieve", { userInput })
       const localEmbedding = await generateLocalEmbedding(userInput)
 
-      const { data: localFileItems, error: localFileItemsError } =
-        await supabaseAdmin.rpc("match_file_items_local", {
+      // console.log("localEmbedding", localEmbedding, sourceCount, uniqueFileIds)
+      // const { index, storageContext } = await getDatabase()
+
+      // const retriever = await index.asRetriever({ similarityTopK: 3 })
+      // const mdFilters = [
+      //   {
+      //     key: "file_id",
+      //     value: fileIds,
+      //     filterType: "InArray",
+      //   },
+      // ]
+      // const results = await retriever.retrieve({ query: userInput, preFilters: { filters: mdFilters } })
+      // console.log("node results:", results)
+      // const best = results[0].score || 0
+      // const pages = []
+      // for (let node of results) {
+      //   if (node.score && node.score < best * 0.995) continue;
+      //   if (node.node.sourceNode) {
+      //     const doc = await index.docStore.getDocument(node.node.sourceNode?.nodeId, false)
+      //     // console.log("found chunk doc metadata:", doc?.metadata, node.node.metadata, node.node.relationships)
+      //     pages.push({ id: doc?.id_, file_id: doc?.metadata?.file_id, content: doc?.getContent(MetadataMode.NONE), similarity: node.score })
+      //   }
+      // }
+      // chunks = uniqBy(pages, 'id')
+      // console.log("returning pages:", chunks.length, chunks)
+
+      // const { data: localFileItems, error: localFileItemsError } =
+      //   await supabaseAdmin.rpc("match_file_items_local", {
+      //     query_embedding: localEmbedding as any,
+      //     match_count: sourceCount,
+      //     file_ids: uniqueFileIds
+      //   })
+
+      const { data: localPageItems, error: localPageItemsError } =
+        await supabaseAdmin.rpc("match_file_pages_local", {
           query_embedding: localEmbedding as any,
           match_count: sourceCount,
           file_ids: uniqueFileIds
         })
-
-      if (localFileItemsError) {
-        throw localFileItemsError
+      if (localPageItemsError) {
+        throw localPageItemsError
       }
 
-      chunks = localFileItems
+      const groups = groupBy(localPageItems, _ =>
+        _.similarity === -1 ? "pages" : "items"
+      )
+      const pages = groups["pages"]
+      const items = groups["items"]
+      const best = items[0]
+      const validPages = uniq(
+        items
+          .filter(_ => _.similarity >= best.similarity * 0.995)
+          .map(_ => _.source)
+      )
+      chunks = pages.filter(_ => validPages.includes(_.id))
+
+      // chunks = localFileItems
+      console.log("found db items", {
+        localPageItems,
+        localPageItemsError,
+        validPages
+      })
+      console.log("returning pages:", chunks.length, "best:", best.similarity)
     }
 
-    const mostSimilarChunks = chunks?.sort(
-      (a, b) => b.similarity - a.similarity
-    )
+    // const mostSimilarChunks = chunks?.sort(
+    //   (a, b) => b.similarity - a.similarity
+    // )
 
-    return new Response(JSON.stringify({ results: mostSimilarChunks }), {
+    return new Response(JSON.stringify({ results: chunks }), {
       status: 200
     })
   } catch (error: any) {

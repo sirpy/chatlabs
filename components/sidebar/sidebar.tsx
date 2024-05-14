@@ -68,12 +68,10 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
       value={contentType}
     >
       <div className="flex h-full flex-col p-3">
-        {workspaces?.length > 1 && (
-          <div className="flex items-center border-b pb-2">
-            <WorkspaceSwitcher />
-            <WorkspaceSettings />
-          </div>
-        )}
+        <div className="flex items-center border-b pb-2">
+          <WorkspaceSettings />
+          <WorkspaceSwitcher />
+        </div>
 
         {(() => {
           switch (contentType) {

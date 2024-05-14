@@ -46,10 +46,10 @@ export const ModelOption: FC<ModelOptionProps> = ({
           {recent ? (
             <IconHistory
               className={cn(
-                "rounded-sm bg-[#fff] p-1 text-black",
+                "rounded-sm bg-white p-1 text-black",
                 theme === "dark"
                   ? "bg-white"
-                  : "border-foreground/10 border-[1px]"
+                  : "border-foreground/10 border-DEFAULT"
               )}
               stroke={1.5}
               size={24}

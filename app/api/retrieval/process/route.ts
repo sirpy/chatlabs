@@ -1,4 +1,3 @@
-import { generateLocalEmbedding } from "@/lib/generate-local-embedding"
 import {
   processCSV,
   processJSON,
@@ -6,16 +5,25 @@ import {
   processPdf,
   processTxt
 } from "@/lib/retrieval/processing"
+import { splitPagesToChunks } from "@/lib/llamaindex/database"
 import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
 import { Database } from "@/supabase/types"
 import { FileItemChunk } from "@/types"
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import { Document, Metadata, MetadataMode } from "llamaindex"
+import { createSHA256 } from "@llamaindex/env"
+import { batchEmbeddings } from "@/lib/generate-local-embedding"
 
 const maxDuration = 300
 export async function POST(req: Request) {
   try {
+    console.log(
+      "process request",
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     const supabaseAdmin = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -23,11 +31,14 @@ export async function POST(req: Request) {
 
     const profile = await getServerProfile()
 
+    console.log("process request", profile)
     const formData = await req.formData()
 
     const file = formData.get("file") as File
     const file_id = formData.get("file_id") as string
     const embeddingsProvider = formData.get("embeddingsProvider") as string
+
+    console.log("process request", { file_id, embeddingsProvider })
 
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const blob = new Blob([fileBuffer])
@@ -42,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     let chunks: FileItemChunk[] = []
-
+    console.log("process request", { fileExtension })
     switch (fileExtension) {
       case "csv":
         chunks = await processCSV(blob)
@@ -82,6 +93,27 @@ export async function POST(req: Request) {
       })
     }
 
+    // const { indexDocuments } = await getDatabase()
+
+    console.log(
+      "docsMeta",
+      chunks.map(_ => _.metadata)
+    )
+    const sha256 = createSHA256()
+    chunks.forEach(_ => sha256.update(_.content))
+    const deterministic_file_id = sha256.digest()
+    let docs = chunks.map(
+      _ =>
+        new Document({
+          text: _.content,
+          metadata: { loc: _.metadata?.loc, file_id, deterministic_file_id }
+        })
+    )
+    console.log("smaple doc metadata:", docs[0].metadata)
+    const nodes = await splitPagesToChunks(docs)
+    console.log("nodes:", nodes.slice(0, 5))
+    // await indexDocuments(docs)
+
     if (embeddingsProvider === "openai") {
       const response = await openai.embeddings.create({
         model: "text-embedding-3-small",
@@ -92,24 +124,24 @@ export async function POST(req: Request) {
         return item.embedding
       })
     } else if (embeddingsProvider === "local") {
-      const embeddingPromises = chunks.map(async chunk => {
-        try {
-          return await generateLocalEmbedding(chunk.content)
-        } catch (error) {
-          console.error(`Error generating embedding for chunk: ${chunk}`, error)
-
-          return null
-        }
-      })
-
-      embeddings = await Promise.all(embeddingPromises)
+      embeddings = await batchEmbeddings(
+        nodes.map(_ => _.getContent(MetadataMode.NONE)),
+        256,
+        { logProgress: true }
+      )
     }
 
-    const file_items = chunks.map((chunk, index) => ({
+    console.log("process request", "got embeddings", embeddings.length)
+
+    const file_items = nodes.map((chunk, index) => ({
+      id: chunk.id_,
       file_id,
+      source: chunk.relationships.SOURCE?.nodeId,
+      next: chunk.relationships.NEXT?.nodeId,
+      // metadata: chunk.metadata,
       user_id: profile.user_id,
-      content: chunk.content,
-      tokens: chunk.tokens,
+      content: chunk.getContent(MetadataMode.NONE),
+      tokens: chunk.getContent(MetadataMode.NONE).length,
       openai_embedding:
         embeddingsProvider === "openai"
           ? ((embeddings[index] || null) as any)
@@ -120,19 +152,51 @@ export async function POST(req: Request) {
           : null
     }))
 
-    await supabaseAdmin.from("file_items").upsert(file_items)
+    const pages = docs.map((chunk, index) => ({
+      id: chunk.id_,
+      file_id,
+      source: chunk.relationships.SOURCE?.nodeId,
+      next: chunk.relationships.NEXT?.nodeId,
+      // metadata: chunk.metadata,
+      user_id: profile.user_id,
+      content: chunk.getContent(MetadataMode.NONE),
+      tokens: chunk.getContent(MetadataMode.NONE).length,
+      openai_embedding: null,
+      local_embedding: null
+    }))
+
+    console.log(
+      "process request",
+      "inserting to supabase",
+      "chunks:",
+      file_items.length,
+      "pages:",
+      pages.length
+    )
+
+    const upsertResult = await supabaseAdmin
+      .from("file_items")
+      .upsert(file_items.concat(pages))
 
     const totalTokens = file_items.reduce((acc, item) => acc + item.tokens, 0)
+    console.log("process request", "inserted to supabase", {
+      totalTokens,
+      upsertResult
+    })
 
     await supabaseAdmin
       .from("files")
       .update({ tokens: totalTokens })
       .eq("id", file_id)
 
-    return new NextResponse("Embed Successful", {
-      status: 200
-    })
+    return new Response(
+      JSON.stringify({ message: "Embed Successful", deterministic_file_id }),
+      {
+        status: 200
+      }
+    )
   } catch (error: any) {
+    console.log(error)
     const errorMessage = error.error?.message || "An unexpected error occurred"
     const errorCode = error.status || 500
     return new Response(JSON.stringify({ message: errorMessage }), {

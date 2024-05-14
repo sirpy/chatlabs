@@ -5,5 +5,5 @@ export * from "./md"
 export * from "./pdf"
 export * from "./txt"
 
-export const CHUNK_SIZE = 4000
-export const CHUNK_OVERLAP = 200
+export const CHUNK_SIZE = 256
+export const CHUNK_OVERLAP = 0
