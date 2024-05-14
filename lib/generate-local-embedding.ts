@@ -30,12 +30,13 @@ export async function batchEmbeddings(
   return resultEmbeddings
 }
 
-const generateEmbedding = await pipeline(
+const generateEmbeddingPromise = pipeline(
   "feature-extraction",
   "Xenova/multilingual-e5-small"
 )
 
 export async function generateLocalEmbedding(content: string) {
+  const generateEmbedding = await generateEmbeddingPromise
   console.log("Generated local embedding generating....")
   const output = await generateEmbedding(content, {
     pooling: "mean",
