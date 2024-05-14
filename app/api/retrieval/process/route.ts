@@ -12,9 +12,10 @@ import { FileItemChunk } from "@/types"
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { Document, Metadata, MetadataMode } from "llamaindex"
+import { Document, MetadataMode, RelatedNodeType } from "llamaindex"
 import { createSHA256 } from "@llamaindex/env"
 import { batchEmbeddings } from "@/lib/generate-local-embedding"
+import { Metadata } from "next"
 
 const maxDuration = 300
 export async function POST(req: Request) {
@@ -136,8 +137,8 @@ export async function POST(req: Request) {
     const file_items = nodes.map((chunk, index) => ({
       id: chunk.id_,
       file_id,
-      source: chunk.relationships.SOURCE?.nodeId,
-      next: chunk.relationships.NEXT?.nodeId,
+      source: (chunk.relationships.SOURCE as any).nodeId,
+      next: (chunk.relationships.NEXT as any).nodeId,
       // metadata: chunk.metadata,
       user_id: profile.user_id,
       content: chunk.getContent(MetadataMode.NONE),
@@ -155,8 +156,8 @@ export async function POST(req: Request) {
     const pages = docs.map((chunk, index) => ({
       id: chunk.id_,
       file_id,
-      source: chunk.relationships.SOURCE?.nodeId,
-      next: chunk.relationships.NEXT?.nodeId,
+      source: (chunk.relationships.SOURCE as any).nodeId,
+      next: (chunk.relationships.NEXT as any).nodeId,
       // metadata: chunk.metadata,
       user_id: profile.user_id,
       content: chunk.getContent(MetadataMode.NONE),
