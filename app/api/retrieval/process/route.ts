@@ -138,10 +138,16 @@ export async function POST(req: Request) {
           texts: batch.map(node => node.getContent(MetadataMode.NONE)),
           input_type: "search_document"
         }
-        const response = await fetch("https://api.cohere.ai/v1/embed", { headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+        const response = await fetch("https://api.cohere.ai/v1/embed", {
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            Authorization: `bearer ${process.env.COHERE_API_KEY}`
+          },
+          body: JSON.stringify(embedRequest)
+        }).then(_ => _.json())
 
-        embeddings = response.embeddings;
-
+        embeddings = response.embeddings
       })
     } else if (embeddingsProvider === "local") {
       // embeddings = await batchEmbeddings(
@@ -155,13 +161,20 @@ export async function POST(req: Request) {
           texts: batch.map(node => node.getContent(MetadataMode.NONE)),
           input_type: "search_document"
         }
-        const response = await fetch("https://api.cohere.ai/v1/embed", { method: "POST", headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+        const response = await fetch("https://api.cohere.ai/v1/embed", {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            Authorization: `bearer ${process.env.COHERE_API_KEY}`
+          },
+          body: JSON.stringify(embedRequest)
+        }).then(_ => _.json())
         console.log("process cohere request", "got response batch:", i)
-        return response.embeddings;
+        return response.embeddings
       })
       embeddings = flatten(await Promise.all(promises))
     }
-
 
     console.log("process request", "got embeddings", embeddings.length)
 

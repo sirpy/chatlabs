@@ -62,7 +62,14 @@ export async function POST(request: Request) {
         texts: [userInput],
         input_type: "search_query"
       }
-      const response = await fetch("https://api.cohere.ai/v1/embed", { headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+      const response = await fetch("https://api.cohere.ai/v1/embed", {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          Authorization: `bearer ${process.env.COHERE_API_KEY}`
+        },
+        body: JSON.stringify(embedRequest)
+      }).then(_ => _.json())
 
       const { data: openaiFileItems, error: openaiError } =
         await supabaseAdmin.rpc("match_file_items_openai", {
@@ -84,7 +91,15 @@ export async function POST(request: Request) {
         texts: [userInput],
         input_type: "search_query"
       }
-      const response = await fetch("https://api.cohere.ai/v1/embed", { method: "POST", headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+      const response = await fetch("https://api.cohere.ai/v1/embed", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          Authorization: `bearer ${process.env.COHERE_API_KEY}`
+        },
+        body: JSON.stringify(embedRequest)
+      }).then(_ => _.json())
 
       const localEmbedding = response.embeddings[0]
 
