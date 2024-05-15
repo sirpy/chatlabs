@@ -97,8 +97,8 @@ export async function POST(req: Request) {
     // const { indexDocuments } = await getDatabase()
 
     console.log(
-      "docsMeta",
-      chunks.map(_ => _.metadata)
+      "docsMeta sample",
+      chunks.slice(0, 2).map(_ => _.metadata)
     )
     const sha256 = createSHA256()
     chunks.forEach(_ => sha256.update(_.content))
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     )
     console.log("smaple doc metadata:", docs[0].metadata)
     const nodes = await splitPagesToChunks(docs)
-    console.log("nodes:", nodes.slice(0, 5))
+    console.log("nodes:", nodes.slice(0, 5), " starting embeddings...")
     // await indexDocuments(docs)
 
     if (embeddingsProvider === "openai") {
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     } else if (embeddingsProvider === "local") {
       embeddings = await batchEmbeddings(
         nodes.map(_ => _.getContent(MetadataMode.NONE)),
-        256,
+        Number(process.env.EMBEDDING_BATCH_SIZE) || 100,
         { logProgress: true }
       )
     }
