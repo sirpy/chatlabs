@@ -15,7 +15,7 @@ import OpenAI from "openai"
 import { Document, MetadataMode, RelatedNodeType } from "llamaindex"
 import { createSHA256 } from "@llamaindex/env"
 import { batchEmbeddings } from "@/lib/generate-local-embedding"
-import { Metadata } from "next"
+import { chunk, flatten } from "lodash"
 
 const maxDuration = 300
 export async function POST(req: Request) {
@@ -116,29 +116,60 @@ export async function POST(req: Request) {
     // await indexDocuments(docs)
 
     if (embeddingsProvider === "openai") {
-      const response = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: chunks.map(chunk => chunk.content)
-      })
+      //     curl --request POST \
+      // --url https://api.cohere.ai/v1/embed \
+      // --header 'accept: application/json' \
+      // --header 'content-type: application/json' \
+      // --header "Authorization: bearer $CO_API_KEY" \
+      // --data '{
+      //   "model": "embed-english-v3.0",
+      //   "texts": ["hello", "goodbye"],
+      //   "input_type": "classification"
+      // }'
 
-      embeddings = response.data.map((item: any) => {
-        return item.embedding
+      // const response = await openai.embeddings.create({
+      //   model: "text-embedding-3-small",
+      //   input: chunks.map(chunk => chunk.content)
+      // })
+
+      chunk(nodes, 96).map(async batch => {
+        const embedRequest = {
+          model: "embed-multilingual-light-v3.0",
+          texts: batch.map(node => node.getContent(MetadataMode.NONE)),
+          input_type: "search_document"
+        }
+        const response = await fetch("https://api.cohere.ai/v1/embed", { headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+
+        embeddings = response.embeddings;
+
       })
     } else if (embeddingsProvider === "local") {
-      embeddings = await batchEmbeddings(
-        nodes.map(_ => _.getContent(MetadataMode.NONE)),
-        Number(process.env.EMBEDDING_BATCH_SIZE) || 100,
-        { logProgress: true }
-      )
+      // embeddings = await batchEmbeddings(
+      //   nodes.map(_ => _.getContent(MetadataMode.NONE)),
+      //   Number(process.env.EMBEDDING_BATCH_SIZE) || 100,
+      //   { logProgress: true }
+      // )
+      const promises = chunk(nodes, 96).map(async (batch, i) => {
+        const embedRequest = {
+          model: "embed-multilingual-light-v3.0",
+          texts: batch.map(node => node.getContent(MetadataMode.NONE)),
+          input_type: "search_document"
+        }
+        const response = await fetch("https://api.cohere.ai/v1/embed", { method: "POST", headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+        console.log("process cohere request", "got response batch:", i)
+        return response.embeddings;
+      })
+      embeddings = flatten(await Promise.all(promises))
     }
+
 
     console.log("process request", "got embeddings", embeddings.length)
 
     const file_items = nodes.map((chunk, index) => ({
       id: chunk.id_,
       file_id,
-      source: (chunk.relationships.SOURCE as any).nodeId,
-      next: (chunk.relationships.NEXT as any).nodeId,
+      source: (chunk.relationships.SOURCE as any)?.nodeId,
+      next: (chunk.relationships.NEXT as any)?.nodeId,
       // metadata: chunk.metadata,
       user_id: profile.user_id,
       content: chunk.getContent(MetadataMode.NONE),
@@ -156,8 +187,8 @@ export async function POST(req: Request) {
     const pages = docs.map((chunk, index) => ({
       id: chunk.id_,
       file_id,
-      source: (chunk.relationships.SOURCE as any).nodeId,
-      next: (chunk.relationships.NEXT as any).nodeId,
+      source: (chunk.relationships.SOURCE as any)?.nodeId,
+      next: (chunk.relationships.NEXT as any)?.nodeId,
       // metadata: chunk.metadata,
       user_id: profile.user_id,
       content: chunk.getContent(MetadataMode.NONE),

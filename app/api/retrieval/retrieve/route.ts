@@ -50,16 +50,23 @@ export async function POST(request: Request) {
     }
 
     if (embeddingsProvider === "openai") {
-      const response = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: userInput
-      })
+      // const response = await openai.embeddings.create({
+      //   model: "text-embedding-3-small",
+      //   input: userInput
+      // })
 
-      const openaiEmbedding = response.data.map(item => item.embedding)[0]
+      // const openaiEmbedding = response.data.map(item => item.embedding)[0]
+
+      const embedRequest = {
+        model: "embed-multilingual-light-v3.0",
+        texts: [userInput],
+        input_type: "search_query"
+      }
+      const response = await fetch("https://api.cohere.ai/v1/embed", { headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
 
       const { data: openaiFileItems, error: openaiError } =
         await supabaseAdmin.rpc("match_file_items_openai", {
-          query_embedding: openaiEmbedding as any,
+          query_embedding: response.embeddings[0] as any,
           match_count: sourceCount,
           file_ids: uniqueFileIds
         })
@@ -71,7 +78,17 @@ export async function POST(request: Request) {
       chunks = openaiFileItems
     } else if (embeddingsProvider === "local") {
       console.log("retrieve", { userInput })
-      const localEmbedding = await generateLocalEmbedding(userInput)
+
+      const embedRequest = {
+        model: "embed-multilingual-light-v3.0",
+        texts: [userInput],
+        input_type: "search_query"
+      }
+      const response = await fetch("https://api.cohere.ai/v1/embed", { method: "POST", headers: { "accept": "application/json", "content-type": "application/json", "Authorization": `bearer ${process.env.COHERE_API_KEY}` }, body: JSON.stringify(embedRequest) }).then(_ => _.json())
+
+      const localEmbedding = response.embeddings[0]
+
+      // const localEmbedding = await generateLocalEmbedding(userInput)
 
       // console.log("localEmbedding", localEmbedding, sourceCount, uniqueFileIds)
       // const { index, storageContext } = await getDatabase()
