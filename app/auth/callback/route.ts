@@ -24,6 +24,8 @@ export async function GET(request: Request) {
         requestUrl.origin + "/login?error_description=" + error_description
       )
     }
-    return NextResponse.redirect(requestUrl.origin)
+    let hostname = request.headers.get("host") || requestUrl.hostname
+    hostname = hostname === "localhost" ? `http://${hostname}` : `https://${hostname}`
+    return NextResponse.redirect(hostname)
   }
 }
