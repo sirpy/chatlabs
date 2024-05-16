@@ -73,11 +73,11 @@ BEGIN
         TRUE,
         'Home',
         4096,
-        'gpt-3.5-turbo-0125', -- Updated default model
+        'llama3-70b-8192', -- Updated default model
         'You are a friendly, helpful AI assistant.',
         0.5,
         'My home workspace.',
-        'openai',
+        'local',
         TRUE,
         TRUE,
         ''

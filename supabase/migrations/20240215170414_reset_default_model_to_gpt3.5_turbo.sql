@@ -1,27 +1,27 @@
 -- WORKSPACES
 
 UPDATE workspaces
-SET default_model = 'gpt-3.5-turbo';
+SET default_model = 'llama3-70b-8192';
 
 -- PRESETS
 
 UPDATE presets
-SET model = 'gpt-3.5-turbo';
+SET model = 'llama3-70b-8192';
 
 -- ASSISTANTS
 
 UPDATE assistants
-SET model = 'gpt-3.5-turbo';
+SET model = 'llama3-70b-8192';
 
 -- CHATS
 
 UPDATE chats
-SET model = 'gpt-3.5-turbo';
+SET model = 'llama3-70b-8192';
 
 -- MESSAGES
 
 UPDATE messages
-SET model = 'gpt-3.5-turbo';
+SET model = 'llama3-70b-8192';
 
 -- PROFILES
 
@@ -68,11 +68,11 @@ BEGIN
         TRUE,
         'Home',
         4096,
-        'gpt-3.5-turbo', -- Updated default model
+        'llama3-70b-8192', -- Updated default model
         'You are a friendly, helpful AI assistant.',
         0.5,
         'My home workspace.',
-        'openai',
+        'local',
         TRUE,
         TRUE,
         ''

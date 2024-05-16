@@ -140,7 +140,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
     model => model.model_id === chatSettings.model
   )
 
-  useEffect(() => { }, [])
+  useEffect(() => {}, [])
 
   function findOpenRouterModel(modelId: string) {
     return availableOpenRouterModels.find(model => model.modelId === modelId)
@@ -161,7 +161,7 @@ export const AdvancedContent: FC<AdvancedContentProps> = ({
 
   const maxContextLength = isCustomModel
     ? models.find(model => model.model_id === chatSettings.model)
-      ?.context_length
+        ?.context_length
     : MODEL_LIMITS.MAX_CONTEXT_LENGTH
 
   return (

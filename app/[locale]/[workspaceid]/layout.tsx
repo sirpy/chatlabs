@@ -68,7 +68,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const session = (await supabase.auth.getSession()).data.session
 
       if (!session) {
@@ -80,7 +80,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   }, [])
 
   useEffect(() => {
-    ;(async () => await fetchWorkspaceData(workspaceId))()
+    ; (async () => await fetchWorkspaceData(workspaceId))()
     setUserInput("")
     setChatMessages([])
     setSelectedChat(null)
@@ -204,7 +204,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setChatSettings({
       model: (chatSettings?.model ||
         workspace?.default_model ||
-        "gpt-3.5-turbo-0125") as LLMID,
+        "llama3-70b-8192") as LLMID,
       prompt:
         // chatSettings?.prompt ||
         workspace?.default_prompt ||
@@ -223,7 +223,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
         workspace?.include_workspace_instructions || true,
       embeddingsProvider:
         // chatSettings?.embeddingsProvider ||
-        (workspace?.embeddings_provider as "openai" | "local") || "openai"
+        (workspace?.embeddings_provider as "openai" | "local") || "local"
     })
 
     setLoading(false)

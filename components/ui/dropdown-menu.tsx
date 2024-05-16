@@ -81,7 +81,7 @@ export const DropdownMenuSubContent2 = React.forwardRef<
   return (
     <div
       className={cn(
-        "bg-popover text-popover-foreground z-50 min-w-[8rem] overflow-y-auto rounded-md border shadow-md",
+        "bg-popover text-popover-foreground z-50 min-w-32 overflow-y-auto rounded-md border shadow-md",
         className
       )}
       {...props}

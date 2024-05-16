@@ -190,9 +190,8 @@ export async function buildFinalMessages(
 
     finalMessages[finalMessages.length - 1] = {
       ...finalMessages[finalMessages.length - 1],
-      content: `${
-        finalMessages[finalMessages.length - 1].content
-      }\n\n${retrievalText}`
+      content: `${finalMessages[finalMessages.length - 1].content
+        }\n\n${retrievalText}`
     }
   }
 
@@ -201,10 +200,11 @@ export async function buildFinalMessages(
 
 function buildRetrievalText(fileItems: Tables<"file_items">[]) {
   const retrievalText = fileItems
-    .map(item => `<BEGIN SOURCE>\n${item.content}\n</END SOURCE>`)
+    .map((item, i) => `<BEGIN SOURCE id=${i}>\n${item.content}\n</END SOURCE>`)
     .join("\n\n")
 
-  return `You may use the following sources if needed to answer the user's question. If you don't know the answer, say "I don't know. Answer in the question language."\n\n${retrievalText}`
+  return `תענה על שאלת המשתמש בעברית. אם אין לך תשובה ענה "אינני יודע". אתה יכול להשתמש במקורות הבאים בכדי לענות. ציין את הסעיפים המקורות והעמודים בהם השתמשת בכדי לענות.\n\n${retrievalText}`
+  // return `You may use the following sources if needed to answer the user's question. If you don't know the answer, say "I don't know. Answer in the question language."\n\n${retrievalText}`
 }
 
 export async function buildGoogleGeminiFinalMessages(

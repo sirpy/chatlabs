@@ -59,33 +59,33 @@ export const ChatbotUIChatContext = createContext<ChatbotUIChatContext>({
   // setUserInput: () => {
   // },
   selectedChat: null,
-  setSelectedChat: () => {},
+  setSelectedChat: () => { },
   chatMessages: [],
-  setChatMessages: () => {},
+  setChatMessages: () => { },
   chatSettings: null,
-  setChatSettings: () => {},
+  setChatSettings: () => { },
   chatFileItems: [],
-  setChatFileItems: () => {},
+  setChatFileItems: () => { },
 
   // ACTIVE CHAT STORE
   isGenerating: false,
-  setIsGenerating: () => {},
+  setIsGenerating: () => { },
   firstTokenReceived: false,
-  setFirstTokenReceived: () => {},
+  setFirstTokenReceived: () => { },
   abortController: null,
-  setAbortController: () => {},
+  setAbortController: () => { },
 
   requestTokensTotal: 0,
-  setRequestTokensTotal: () => {},
+  setRequestTokensTotal: () => { },
   responseTimeToFirstToken: 0,
-  setResponseTimeToFirstToken: () => {},
+  setResponseTimeToFirstToken: () => { },
   responseTimeTotal: 0,
-  setResponseTimeTotal: () => {},
+  setResponseTimeTotal: () => { },
   responseTokensTotal: 0,
-  setResponseTokensTotal: () => {},
+  setResponseTokensTotal: () => { },
 
   selectedTools: [],
-  setSelectedTools: () => {}
+  setSelectedTools: () => { }
 })
 
 interface ChatbotUIChatProviderProps {
@@ -110,15 +110,17 @@ export const ChatbotUIChatProvider: FC<ChatbotUIChatProviderProps> = ({
       }
     }
 
-    return {
-      model: "gpt-3.5-turbo-0125",
-      prompt: "You are a helpful AI assistant.",
-      temperature: 0.5,
-      contextLength: 4000,
-      includeProfileContext: true,
-      includeWorkspaceInstructions: true,
-      embeddingsProvider: "openai"
-    }
+    console.log("default chat chat.tsx...")
+    return {}
+    // return {
+    //   model: "gpt-3.5-turbo-0125",
+    //   prompt: "You are a helpful AI assistant.",
+    //   temperature: 0.5,
+    //   contextLength: 4000,
+    //   includeProfileContext: true,
+    //   includeWorkspaceInstructions: true,
+    //   embeddingsProvider: "openai"
+    // }
   })
 
   const [selectedChat, setSelectedChat] = useState<Tables<"chats"> | null>(null)

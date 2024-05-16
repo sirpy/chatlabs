@@ -126,11 +126,11 @@ BEGIN
         TRUE,
         'Home',
         4096,
-        'gpt-4-1106-preview',
+        'llama3-70b-8192',
         'You are a friendly, helpful AI assistant.',
         0.5,
         'My home workspace.',
-        'openai',
+        'local',
         TRUE,
         TRUE,
         ''

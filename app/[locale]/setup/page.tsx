@@ -63,7 +63,7 @@ export default function SetupPage() {
   const [isPaywallOpen, setIsPaywallOpen] = useState(true)
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const session = (await supabase.auth.getSession()).data.session
 
       if (!session) {

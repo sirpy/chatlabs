@@ -25,8 +25,9 @@ export async function GET(request: Request) {
       )
     }
     let hostname = request.headers.get("host") || requestUrl.hostname
-    hostname =
-      hostname.startsWith("localhost") ? `http://${hostname}` : `https://${hostname}`
+    hostname = hostname.startsWith("localhost")
+      ? `http://${hostname}`
+      : `https://${hostname}`
     return NextResponse.redirect(hostname)
   }
 }
